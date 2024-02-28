@@ -10,12 +10,15 @@
 
 using namespace std;
 
+#define BUFF_SIZE 1024 // Максимальный размер буфера для обмена информацией
+#define NAME_SIZE 30
+
 string name;
 
 DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
 
     SOCKET ClientSocket = (SOCKET)lpVoid;
-    vector<char> ClientBuff(1024);
+    vector<char> ClientBuff(BUFF_SIZE);
 
     
 
@@ -23,7 +26,9 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
         string message;
         cout << "--> ";
         getline(cin, message);
-
+        if (message.length() > BUFF_SIZE - NAME_SIZE - 2) {
+            message.resize(BUFF_SIZE - NAME_SIZE - 2);
+        }
 
         // Проверяем, не желает ли клиент завершить чат
         if (message == "Ушел") {
@@ -49,7 +54,7 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
 DWORD WINAPI ReceiveMessageThread(LPVOID lpVoid) {
 
     SOCKET ClientSocket = (SOCKET)lpVoid;
-    vector<char> servBuff(1024);  // Буфер для данных от сервера
+    vector<char> servBuff(BUFF_SIZE);  // Буфер для данных от сервера
 
     while (true) {
         int packet_size = recv(ClientSocket, servBuff.data(), servBuff.size(), 0);
@@ -72,7 +77,7 @@ int main() {
 
     const char IP_SERV[] = "192.168.1.58"; // IP-адрес локального сервера
     const int PORT_NUM = 1234; // Открытый рабочий порт сервера
-    const short BUFF_SIZE = 1024; // Максимальный размер буфера для обмена информацией
+   
 
     // IP в строковом формате преобразуется в числовой формат для функций сокета. Данные находятся в "ip_to_num"
     in_addr ip_to_num;
@@ -109,6 +114,9 @@ int main() {
     system("cls");
     cout << "Введите ваше имя: ";
     getline(cin, name);
+    if (name.length() > NAME_SIZE) {
+        name.resize(NAME_SIZE);
+    }
     cout << endl;
 
     // --- Подключение к серверу ---

@@ -17,32 +17,31 @@ bool OutNameClient(SOCKET СlientSocket) {
     vector<char> servBuff(1024); // Буфер для данных от клиента
 
     int packet_size = recv(СlientSocket, servBuff.data(), servBuff.size(), 0);
+    if (packet_size <= 0) {
+        mutx.lock();
+        clients.remove(СlientSocket); // Удаляем сокет клиента из списка
+        closesocket(СlientSocket);
+        mutx.unlock();
+        return 1;
+    }
+    else {
+        string name(servBuff.data(), packet_size);
+        string message = "\r\t<-- Подключился новый пользователь: " + name + " -->\n";
+        copy(message.begin(), message.end(), servBuff.begin());
+    }
     for (SOCKET otherClient : clients) {
         if (otherClient != СlientSocket) {
-            if (packet_size <= 0) {
-                mutx.lock();
-                clients.remove(СlientSocket); // Удаляем сокет клиента из списка
-                closesocket(СlientSocket);
-                mutx.unlock();
-                return 1;
-            }
-            else {
-                // Преобразование полученных данных в строку
-                string name(servBuff.data(), packet_size);
-                string message = "\r\t<-- Подключился новый пользователь: " + name + " -->\n";
-                copy(message.begin(), message.end(), servBuff.begin());
-                send(otherClient, servBuff.data(), servBuff.size(), 0);
-            }
-
+            send(otherClient, servBuff.data(), servBuff.size(), 0);
         }
     }
+    return 0;
 }
 
 DWORD WINAPI HandleClient(LPVOID lpVoid) {
     vector<char> servBuff(1024); // Буфер для данных от клиента
     SOCKET СlientSocket = (SOCKET)lpVoid;
 
-    if (OutNameClient) {
+    if (OutNameClient(СlientSocket)) {
         cout << "Не успешная попытка ввода имени" << endl;
     }
 
