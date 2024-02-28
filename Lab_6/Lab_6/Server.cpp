@@ -38,7 +38,7 @@ bool OutNameClient(SOCKET СlientSocket) {
 }
 
 DWORD WINAPI HandleClient(LPVOID lpVoid) {
-    vector<char> servBuff(1024); // Буфер для данных от клиента
+    vector<char> ServBuff(1024); // Буфер для данных от клиента
     SOCKET СlientSocket = (SOCKET)lpVoid;
 
     if (OutNameClient(СlientSocket)) {
@@ -46,7 +46,8 @@ DWORD WINAPI HandleClient(LPVOID lpVoid) {
     }
 
     while (true) {
-        int packet_size = recv(СlientSocket, servBuff.data(), servBuff.size(), 0);
+        
+        int packet_size = recv(СlientSocket, ServBuff.data(), ServBuff.size(), 0);
         if (packet_size <= 0) {
             // Ошибка при получении данных или клиент отключился
             mutx.lock();
@@ -61,10 +62,11 @@ DWORD WINAPI HandleClient(LPVOID lpVoid) {
         mutx.lock();
         for (SOCKET otherClient : clients) {
             if (otherClient != СlientSocket) {
-                send(otherClient, servBuff.data(), servBuff.size(), 0);
+                send(otherClient, ServBuff.data(), ServBuff.size(), 0);
             }
         }
         mutx.unlock();
+        memset(ServBuff.data(), 0, ServBuff.size());
     }
     return 0;
 }
@@ -162,32 +164,6 @@ int main() {
         cout << "Прослушивание настроено, ждем клиента..." << endl;
     }
 
-    // --- Создание и принятие клиентского сокета в случае подключения ---
-    /*
-    sockaddr_in clientInfo;
-    ZeroMemory(&clientInfo, sizeof(clientInfo));
-
-    int clientInfo_size = sizeof(clientInfo);
-
-    SOCKET ClientConnect = accept(ServSocket, (sockaddr*)&clientInfo, &clientInfo_size);
-
-    if (ClientConnect == INVALID_SOCKET) {
-        cout << "Ошибка при принятии входящего соединения: " << WSAGetLastError() << endl;
-        closesocket(ServSocket);
-        closesocket(ClientConnect);
-        WSACleanup();
-        return 1;
-    }
-    else {
-        cout << "Соединение с клиентом установлено успешно!\n" << endl;
-
-        // Получение клиентского IP
-        char clientIP[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &clientInfo.sin_addr, clientIP, INET_ADDRSTRLEN);
-        cout << "IP адрес клиента: " << clientIP << endl;
-    }
-    */
-
     
     while (true) {
         // Принятие клиентского сокета в случае подключения
@@ -213,39 +189,6 @@ int main() {
             CreateClientThread(ClientSocket); // Запускаем поток для обработки клиента
         }
     }
-
-    /*
-    vector <char> servBuff(BUFF_SIZE), clientBuff(BUFF_SIZE);							// Creation of buffers for sending and receiving data
-    short packet_size = 0;												// The size of sending / receiving packet in bytes
-
-    while (true) {
-        packet_size = recv(ClientConnect, servBuff.data(), servBuff.size(), 0);					// Receiving packet from client. Program is waiting (system pause) until receive
-        cout << "Client's message: " << servBuff.data() << endl;
-
-        cout << "Your (host) message: ";
-        fgets(clientBuff.data(), clientBuff.size(), stdin);
-
-        // Check whether server would like to stop chatting 
-        if (clientBuff[0] == 'x' && clientBuff[1] == 'x' && clientBuff[2] == 'x') {
-            shutdown(ClientConnect, SD_BOTH);
-            closesocket(ServSocket);
-            closesocket(ClientConnect);
-            WSACleanup();
-            return 0;
-        }
-
-        packet_size = send(ClientConnect, clientBuff.data(), clientBuff.size(), 0);
-
-        if (packet_size == SOCKET_ERROR) {
-            cout << "Can't send message to Client. Error # " << WSAGetLastError() << endl;
-            closesocket(ServSocket);
-            closesocket(ClientConnect);
-            WSACleanup();
-            return 1;
-        }
-
-    }
-    */
 
     // Закрытие сокетов и освобождение ресурсов
     closesocket(ServSocket);

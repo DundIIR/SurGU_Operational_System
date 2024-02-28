@@ -29,6 +29,10 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
         if (message.length() > BUFF_SIZE - NAME_SIZE - 2) {
             message.resize(BUFF_SIZE - NAME_SIZE - 2);
         }
+        else if (message.length() < 1) {
+            cout << "\r2";
+            continue;
+        }
 
         // Проверяем, не желает ли клиент завершить чат
         if (message == "Ушел") {
@@ -46,6 +50,8 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
             closesocket(ClientSocket);
             return 1;
         }
+
+        memset(ClientBuff.data(), 0, ClientBuff.size());
     }
 
     return 0;
@@ -54,10 +60,10 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
 DWORD WINAPI ReceiveMessageThread(LPVOID lpVoid) {
 
     SOCKET ClientSocket = (SOCKET)lpVoid;
-    vector<char> servBuff(BUFF_SIZE);  // Буфер для данных от сервера
+    vector<char> ServBuff(BUFF_SIZE);  // Буфер для данных от сервера
 
     while (true) {
-        int packet_size = recv(ClientSocket, servBuff.data(), servBuff.size(), 0);
+        int packet_size = recv(ClientSocket, ServBuff.data(), ServBuff.size(), 0);
         if (packet_size <= 0) {
             // Ошибка при получении данных или сервер отключился
             cout << "Ошибка при получении сообщения от сервера: " << WSAGetLastError() << endl;
@@ -65,7 +71,8 @@ DWORD WINAPI ReceiveMessageThread(LPVOID lpVoid) {
             return 1;
         }
         else {
-            cout << "\r   \t\t<-- " << servBuff.data() << "\n--> ";
+            cout << "\r   \t\t<-- " << ServBuff.data() << "\n--> ";
+            memset(ServBuff.data(), 0, ServBuff.size());
         }
     }
     return 0;
@@ -111,11 +118,14 @@ int main() {
         cout << "Сокет для клиента успешно создан" << endl;
 
     // --- Получаем имя клиента ---
-    system("cls");
-    cout << "Введите ваше имя: ";
-    getline(cin, name);
-    if (name.length() > NAME_SIZE) {
-        name.resize(NAME_SIZE);
+    while (true) {
+        system("cls");
+        cout << "Введите ваше имя: ";
+        getline(cin, name);
+        if (name.length() > NAME_SIZE || name.length() < 1) {
+            continue;
+        }
+        break;
     }
     cout << endl;
 
