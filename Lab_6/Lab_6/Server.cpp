@@ -37,9 +37,22 @@ bool OutNameClient(SOCKET СlientSocket) {
     return 0;
 }
 
+string GetIP(SOCKET ClientSocket) {
+    sockaddr_in clientAddr;
+    int addrLen = sizeof(clientAddr);
+    getpeername(ClientSocket, (sockaddr*)&clientAddr, &addrLen);
+
+    char clientIP[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIP, INET_ADDRSTRLEN);
+
+    return string(clientIP);
+}
+
 DWORD WINAPI HandleClient(LPVOID lpVoid) {
     vector<char> ServBuff(1024); // Буфер для данных от клиента
     SOCKET СlientSocket = (SOCKET)lpVoid;
+
+    bool active = TRUE;
 
     if (OutNameClient(СlientSocket)) {
         cout << "Не успешная попытка ввода имени" << endl;
@@ -53,9 +66,13 @@ DWORD WINAPI HandleClient(LPVOID lpVoid) {
             mutx.lock();
             clients.remove(СlientSocket); // Удаляем сокет клиента из списка
             mutx.unlock();
+    
+
+            string message = "\r\t<-- Клиент " + GetIP(СlientSocket) + " отключился -->";
             closesocket(СlientSocket);
-            cout << "Клиент отключился" << endl;
-            return 1;
+            copy(message.begin(), message.end(), ServBuff.begin());
+            cout << message << endl;
+            active = FALSE;
         }
 
         // Отправляем сообщение от клиента всем остальным клиентам
@@ -67,6 +84,7 @@ DWORD WINAPI HandleClient(LPVOID lpVoid) {
         }
         mutx.unlock();
         memset(ServBuff.data(), 0, ServBuff.size());
+        if (!active) return 1;
     }
     return 0;
 }
@@ -92,7 +110,7 @@ int main() {
 
     system("chcp 1251 > 0");
 
-    const char IP_SERV[] = "192.168.1.58"; // IP-адрес локального сервера
+    const char IP_SERV[] = "172.20.10.2"; // IP-адрес локального сервера
     const int PORT_NUM = 1234; // Открытый рабочий порт сервера
     const short BUFF_SIZE = 1024; // Максимальный размер буфера для обмена информацией
 

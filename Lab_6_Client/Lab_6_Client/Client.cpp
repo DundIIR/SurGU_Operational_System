@@ -30,7 +30,6 @@ DWORD WINAPI SendMessageThread(LPVOID lpVoid) {
             message.resize(BUFF_SIZE - NAME_SIZE - 2);
         }
         else if (message.length() < 1) {
-            cout << "\r2";
             continue;
         }
 
@@ -82,7 +81,7 @@ int main() {
 
     system("chcp 1251 > 0");
 
-    const char IP_SERV[] = "192.168.1.58"; // IP-адрес локального сервера
+    const char IP_SERV[] = "172.20.10.2"; // IP-адрес локального сервера
     const int PORT_NUM = 1234; // Открытый рабочий порт сервера
    
 

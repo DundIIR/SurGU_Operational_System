@@ -4,12 +4,12 @@
 #include <ctime>
 
 #define cProducers 3	/*Количество производителей*/	 
-#define cConsumers 5	/*Количество потребителей*/	 
-#define BufferSize 1000	/*Размер буфера*/	 
+#define cConsumers 4	/*Количество потребителей*/	 
+#define BufferSize 100	/*Размер буфера*/	 
 
 int cOperations = 100; /*Количество операций над буфером*/
 
-HANDLE mutex;
+HANDLE mutex, semaphoreMin, semaphoreMax;
 
 DWORD __stdcall getkey(void* b) {
 	cin.get();
@@ -22,11 +22,15 @@ DWORD __stdcall getkey(void* b) {
 DWORD __stdcall producer(void* b) {
 	while (cOperations-- > 0) {
 
+		WaitForSingleObject(semaphoreMax, INFINITE);
+
 		WaitForSingleObject(mutex, INFINITE);
 		int item = rand();
 		cout << "Произвел: " << item << endl;
 		((Buffer*)b)->PutItem(item);
 		ReleaseMutex(mutex);
+
+		ReleaseSemaphore(semaphoreMin, 1, NULL);
 		
 		Sleep(500 + rand() % 100);
 	}
@@ -37,10 +41,13 @@ DWORD __stdcall producer(void* b) {
 DWORD __stdcall consumer(void* b) {
 	while (cOperations-- > 0) {
 
-		WaitForSingleObject(mutex, INFINITE);
+		WaitForSingleObject(semaphoreMin, INFINITE);
 
+		WaitForSingleObject(mutex, INFINITE);
 		cout << "\tПотребил: " << ((Buffer*)b)->GetItem() << endl;
 		ReleaseMutex(mutex);
+
+		ReleaseSemaphore(semaphoreMax, 1, NULL);
 
 		Sleep(500 + rand() % 100);
 	}
@@ -61,6 +68,9 @@ int main() {
 		nullptr // указатель на строку, содержащую имя мьютекса
 	);
 
+	semaphoreMin = CreateSemaphore(NULL, 0, BufferSize, NULL);
+	semaphoreMax = CreateSemaphore(NULL, BufferSize, BufferSize, NULL);
+
 	CreateThread(0, 0, getkey, 0, 0, 0); // Вспомогательный поток, ожидающий нажатие клавиши
 
 	for (int i = 0; i < cProducers; i++)
@@ -71,6 +81,8 @@ int main() {
 
 	WaitForMultipleObjects(cProducers + cConsumers, hThreads, true, INFINITE);
 
+
+	
 	cin.get();
 
 	return 0;

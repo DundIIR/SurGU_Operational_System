@@ -99,8 +99,8 @@ int main()
 
     
     // —оздание потоков дл€ сортировки массива
-	HANDLE hThread1 = CreateThread(nullptr, 0, SortBubbleFlag, nullptr, 0, nullptr);
-    HANDLE hThread2 = CreateThread(nullptr, 0, SortBubbleIndex, nullptr, 0, nullptr);
+	HANDLE hThread1 = CreateThread(nullptr, 0, &SortBubbleFlag, nullptr, 0, nullptr);
+    HANDLE hThread2 = CreateThread(nullptr, 0, &SortBubbleIndex, nullptr, 0, nullptr);
 
     // ќжидание завершени€ работы потоков
     WaitForSingleObject(hThread1, INFINITE);
@@ -118,8 +118,8 @@ int main()
     cout << "\n\n--- приоритет потока SortBubbleFlag выше ---" << endl;
 
     // —оздание потоков дл€ сортировки массива
-    HANDLE hThread3 = CreateThread(nullptr, 0, SortBubbleFlag, nullptr, CREATE_SUSPENDED, nullptr);
-    HANDLE hThread4 = CreateThread(nullptr, 0, SortBubbleIndex, nullptr, CREATE_SUSPENDED, nullptr);
+    HANDLE hThread3 = CreateThread(nullptr, 0, &SortBubbleFlag, nullptr, CREATE_SUSPENDED, nullptr);
+    HANDLE hThread4 = CreateThread(nullptr, 0, &SortBubbleIndex, nullptr, CREATE_SUSPENDED, nullptr);
 
     // ”становка приоритетов разным поток
     SetThreadPriority(hThread3, THREAD_PRIORITY_HIGHEST);
@@ -146,15 +146,15 @@ int main()
     cout << "\n\n--- приоритет потока SortBubbleIndex выше ---" << endl;
 
     // —оздание потоков дл€ сортировки массива
-    HANDLE hThread5 = CreateThread(nullptr, 0, SortBubbleFlag, nullptr, CREATE_SUSPENDED, nullptr);
-    HANDLE hThread6 = CreateThread(nullptr, 0, SortBubbleIndex, nullptr, CREATE_SUSPENDED, nullptr);
+    HANDLE hThread5 = CreateThread(nullptr, 0, &SortBubbleFlag, nullptr, CREATE_SUSPENDED, nullptr);
+    HANDLE hThread6 = CreateThread(nullptr, 0, &SortBubbleIndex, nullptr, CREATE_SUSPENDED, nullptr);
 
 
     // ”становка приоритетов разным поток
-    SetThreadPriority(hThread5, THREAD_PRIORITY_LOWEST);
-    SetThreadPriority(hThread6, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(hThread6, THREAD_PRIORITY_LOWEST);
+    SetThreadPriority(hThread5, THREAD_PRIORITY_HIGHEST);
 
-    /*
+    
     // «апрет динамического изменени€ приоритетов потоков
     SetThreadPriorityBoost(hThread5, TRUE);
     SetThreadPriorityBoost(hThread6, TRUE);
@@ -168,7 +168,7 @@ int main()
         cout << dwError << endl;
         return 1;
     }
-    */
+    
 
     // «апуск выполнени€ потоков
     ResumeThread(hThread5);

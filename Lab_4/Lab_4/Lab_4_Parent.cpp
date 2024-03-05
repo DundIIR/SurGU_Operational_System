@@ -32,10 +32,16 @@ int main()
     sI.hStdError = GetStdHandle(STD_ERROR_HANDLE);   // оставляем стандартный вывод ошибок
     sI.dwFlags |= STARTF_USESTDHANDLES;  // устанавливаем флаг, для оповещения, что дескриптор потока ввода изменен 
 
-    if (!CreateProcess(L"D:\\University-Git\\OC\\Lab_4_Child\\x64\\Debug\\Lab_4_Child.exe", NULL, NULL, NULL, TRUE, 0, NULL, NULL, &sI, &pI)) {
+    if (!CreateProcess(L"C:\\Users\\ruzin\\source\\repos\\DundIIR\\SurGU_Operational_System\\Lab_4_Child\\x64\\Debug\\Lab_4_Child.exe", NULL, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &sI, &pI)) {
         return 1;
     }
 
+    // Передача данных
+    cout << "Это родительское консольное окно" << endl;
+    char message[] = "Я родитель. И это сообщение отправлено от родителя!";
+    DWORD bWritten;
+    WriteFile(hWritePipe, message, sizeof(message), &bWritten, NULL);
+    
     /*
     string s = "cmd.exe";
     LPWSTR ws = new wchar_t[s.size()-2];
@@ -46,10 +52,6 @@ int main()
     }
     */
 
-    // Передача данных
-    char message[] = "Я родитель. И это сообщение отправлено от родителя!";
-    DWORD bWritten;
-    WriteFile(hWritePipe, message, sizeof(message), &bWritten, NULL);
 
     // Ожидание завершения процесса потомка
     WaitForSingleObject(pI.hProcess, INFINITE);
